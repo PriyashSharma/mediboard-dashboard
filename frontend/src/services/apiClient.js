@@ -36,3 +36,23 @@ export async function loginStaff(credentials) {
   })
   return result?.data?.staff
 }
+
+export async function createStaff(staffData) {
+  const result = await request('/staff', {
+    method: 'POST',
+    body: staffData,
+  })
+  return result?.data?.staff
+}
+
+export async function fetchStaffList(params = {}) {
+  const query = new URLSearchParams()
+  if (params.role && params.role !== 'all') {
+    query.set('role', params.role)
+  }
+
+  const result = await request(`/staff${query.toString() ? `?${query.toString()}` : ''}`, {
+    method: 'GET',
+  })
+  return result?.data?.staff ?? []
+}

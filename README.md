@@ -43,3 +43,6 @@ The dev server (default http://localhost:5173) renders the Tailwind-styled Medib
    ```
 
 The backend exposes a production-ready Express app with centralized config, Mongo models, services, and controllers. `POST /api/auth/login` expects `{ staffId, role, password }` and validates credentials against MongoDB.
+Staff management endpoints:
+- `POST /api/staff` accepts `{ staffId, name, role, department, password }` (role: `doctor` or `receptionist`) and creates a new staff account with hashed password.
+- `GET /api/staff` lists all staff members (excluding password hashes) sorted by most recently created.

@@ -1,5 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import LoginForm from './components/LoginForm'
+import AppHeader from './components/AppHeader'
+import DashboardPage from './components/pages/DashboardPage'
+import AddStaffPage from './components/pages/AddStaffPage'
+import StaffListPage from './components/pages/StaffListPage'
+import TimesheetPage from './components/pages/TimesheetPage'
 
 const STAFF_STORAGE_KEY = 'mediboard_staff'
 
@@ -13,6 +18,11 @@ function App() {
       return null
     }
   })
+  const [activeTab, setActiveTab] = useState('dashboard')
+
+  useEffect(() => {
+    setActiveTab('dashboard')
+  }, [staff?.staffId])
 
   const roleLabels = {
     doctor: 'Doctor',
@@ -34,32 +44,57 @@ function App() {
     }
   }
 
+  const tabs = useMemo(() => {
+    if (!staff) return []
+    if (staff.role === 'admin') {
+      return [
+        { id: 'dashboard', label: 'Dashboard' },
+        { id: 'addStaff', label: 'Add Staff' },
+        { id: 'staffList', label: 'Staff List' },
+      ]
+    }
+    if (staff.role === 'doctor') {
+      return [
+        { id: 'dashboard', label: 'Dashboard' },
+        { id: 'timesheet', label: 'Timesheet' },
+      ]
+    }
+    return [{ id: 'dashboard', label: 'Dashboard' }]
+  }, [staff])
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4 py-12 text-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       {staff ? (
-        <div className="w-full max-w-xl space-y-6 rounded-3xl border border-white/10 bg-white/5 p-10 text-center shadow-2xl backdrop-blur">
-          <p className="text-sm uppercase tracking-[0.3em] text-emerald-200">
-            mediboard
-          </p>
-          <h1 className="mt-6 text-4xl font-semibold text-white">
-            Hello {roleLabels[staff.role] || 'Team Member'}
-          </h1>
-          <p className="mt-4 text-base text-slate-300">
-            Welcome back{staff.name ? `, ${staff.name}` : ''}! You&apos;re
-            logged in as {roleLabels[staff.role] || staff.role}.
-          </p>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-2xl border border-white/20 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-emerald-300 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
-          >
-            Log out
-          </button>
-        </div>
+        <>
+          <AppHeader
+            staff={staff}
+            roleLabels={roleLabels}
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onLogout={handleLogout}
+          />
+          <main className="mx-auto flex min-h-[calc(100vh-90px)] w-full max-w-5xl flex-col gap-8 px-4 pb-12">
+
+            {activeTab === 'dashboard' ? <DashboardPage staff={staff} /> : null}
+
+            {activeTab === 'addStaff' && staff.role === 'admin' ? (
+              <AddStaffPage onSuccess={() => setActiveTab('staffList')} />
+            ) : null}
+
+            {activeTab === 'staffList' && staff.role === 'admin' ? <StaffListPage /> : null}
+
+            {activeTab === 'timesheet' && staff.role === 'doctor' ? (
+              <TimesheetPage staff={staff} />
+            ) : null}
+          </main>
+        </>
       ) : (
-        <LoginForm onSuccess={handleLoginSuccess} />
+        <main className="flex min-h-screen items-center justify-center px-4 py-12">
+          <LoginForm onSuccess={handleLoginSuccess} />
+        </main>
       )}
-    </main>
+    </div>
   )
 }
 
